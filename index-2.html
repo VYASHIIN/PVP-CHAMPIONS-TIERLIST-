@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PVP TIER RANKINGS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0c; --panel:#141417; --slot:#18181c; --line:#232327; --text:#f2f2f4; --sub:#87878f;
+  --accent:#ff3b3b;
+  --s:#ff3b3b; --a:#ff8a3d; --b:#ffd23d; --c:#6fcf72; --d:#4fc3d9; --e:#9b7fe8; --f:#6b7280;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;padding:16px 14px 80px}
+h1{font-size:1.15rem;font-weight:800;letter-spacing:.2px;margin:2px 0}
+.sub{color:var(--sub);font-size:.78rem;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.tabs{display:flex;flex-wrap:nowrap;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.tab{background:var(--slot);border:1px solid var(--line);color:var(--sub);padding:7px 12px;font-size:.72rem;font-weight:600;border-radius:20px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:.15s;display:flex;align-items:center;gap:6px}
+.tab .ticon{display:flex;align-items:center}
+.tab .ticon svg{width:16px;height:16px}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.info-btn{width:30px;height:30px;flex-shrink:0;border-radius:50%;background:var(--slot);border:1px solid var(--line);color:var(--sub);font-weight:800;font-family:Georgia,serif;font-style:italic;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.search{width:100%;background:var(--slot);border:1px solid var(--line);border-radius:20px;color:var(--text);padding:9px 14px;font-family:inherit;font-size:.78rem;margin-bottom:14px}
+.search::placeholder{color:var(--sub)}
+.row{display:flex;align-items:stretch;margin-bottom:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.row-label{width:58px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:800;color:#0a0a0c}
+.row-label .tname{font-size:1rem;line-height:1}
+.row-label .tpts{font-size:.58rem;opacity:.75;font-weight:700}
+.row-players{flex:1;display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--panel);align-content:flex-start}
+.card{width:56px;text-align:center;cursor:pointer}
+.head{width:42px;height:42px;margin:0 auto;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff}
+.pname{font-size:.62rem;color:var(--sub);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.empty{color:var(--sub);font-size:.72rem;padding:8px 4px}
+.fab{position:fixed;bottom:18px;right:18px;background:var(--accent);color:#fff;border:none;width:50px;height:50px;border-radius:50%;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 16px rgba(255,59,59,.4)}
+.modal-bg{display:none;position:fixed;inset:0;background:#000c;align-items:center;justify-content:center;padding:14px;z-index:10}
+.modal-bg.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;max-width:340px;width:100%;max-height:85vh;overflow-y:auto}
+.modal h2{margin:0 0 14px;font-size:1rem;font-weight:800}
+.field{margin-bottom:8px}
+.field label{display:block;font-size:.68rem;color:var(--sub);margin-bottom:3px;font-weight:600}
+.field input,.field select{width:100%;background:var(--slot);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px;font-family:inherit;font-size:.8rem}
+.gm-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.btnrow{display:flex;gap:8px;margin-top:16px}
+button.act{flex:1;padding:10px;border:none;border-radius:8px;cursor:pointer;font-size:.75rem;font-family:inherit;font-weight:700}
+.save{background:var(--accent);color:#fff}
+.cancel{background:var(--slot);color:var(--text)}
+.del{background:#3a1518;color:#ff6b6b;border:1px solid #5c2226}
+.stat{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:.78rem}
+.badge{padding:3px 9px;border-radius:6px;color:#0a0a0c;font-weight:700;font-size:.7rem}
+#statusline{font-size:.7rem}
+.rules{border:1px solid var(--line);background:var(--panel);padding:14px;border-radius:10px}
+.rtext{font-size:.72rem;color:var(--sub);line-height:1.7;margin:0 0 4px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>PVP CHAMPIONS <span style="color:var(--accent)">RANKINGS</span></h1>
+  <button class="info-btn" id="infoBtn" title="Tier points info">i</button>
+</div>
+<div class="sub" id="statusline">Connecting...</div>
+<input class="search" id="searchInput" placeholder="Search player name...">
+<div class="tabs" id="tabs"></div>
+<div id="board"></div>
+<button class="fab" id="addBtn" title="Add/Edit">+</button>
+
+<div class="modal-bg" id="infoBg">
+  <div class="modal">
+    <h2>Points Per Tier</h2>
+    <div id="infoStats"></div>
+    <div class="btnrow"><button class="act cancel" id="closeInfo">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2 id="modalTitle">ADD PLAYER</h2>
+    <div class="field"><label>Player name</label><input id="fName"></div>
+    <div class="gm-grid" id="gmGrid"></div>
+    <div class="btnrow">
+      <button class="act cancel" id="cancelBtn">Cancel</button>
+      <button class="act del" id="delBtn" style="display:none">Delete</button>
+      <button class="act save" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="viewBg">
+  <div class="modal">
+    <h2 id="viewName"></h2>
+    <div id="viewStats"></div>
+    <div class="btnrow"><button class="act cancel" id="closeView">Close</button><button class="act save" id="editFromView">Edit</button></div>
+  </div>
+</div>
+
+<!-- ===== Firebase setup: replace this config with YOUR project's config ===== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
+  projectId: "PASTE_YOUR_PROJECT_ID",
+  storageBucket: "PASTE_YOUR_PROJECT.appspot.com",
+  messagingSenderId: "PASTE_YOUR_SENDER_ID",
+  appId: "PASTE_YOUR_APP_ID"
+};
+/* ===== end Firebase config block ===== */
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const playersCol = collection(db, "players");
+
+const GAMEMODES = [
+  ["overall","Overall"],["sword","Sword"],["uhc","UHC"],["axe","Axe"],["smp","SMP"],
+  ["mace","Mace"],["crystal","Crystal"],["pot","Pot"],["netherop","Netherite OP"],
+  ["spearmace","Spear Mace"],["diamondsmp","Diamond SMP"],["tntcart","TNT Cart"]
+];
+const TIERS = ["S","High A","Low A","High B","Low B","C","D","E","F"];
+const TIER_COLOR = {
+  "S":"var(--s)", "High A":"var(--a)", "Low A":"var(--a)",
+  "High B":"var(--b)", "Low B":"var(--b)",
+  "C":"var(--c)","D":"var(--d)","E":"var(--e)","F":"var(--f)"
+};
+const TIER_SHORT = {"S":"S","High A":"HA","Low A":"LA","High B":"HB","Low B":"LB","C":"C","D":"D","E":"E","F":"F"};
+const POINTS = {"S":100,"High A":80,"Low A":80,"High B":60,"Low B":60,"C":45,"D":30,"E":15,"F":5};
+
+const ICON_PATHS = {
+  rules: `<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12.01" y2="8"/><line x1="12" y1="11" x2="12" y2="16"/>`,
+  overall: `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/>`,
+  sword: `<line x1="5" y1="19" x2="19" y2="5"/><line x1="15" y1="9" x2="19" y2="13"/><circle cx="5" cy="19" r="1.4"/>`,
+  uhc: `<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 1 0-7.8 7.8l1.1 1.1L12 21.2l7.8-7.8 1.1-1.1a5.5 5.5 0 0 0-.1-7.7z"/>`,
+  axe: `<path d="M7 3v18"/><path d="M7 4c4.5 0 8 2.2 8 5.5S11.5 15 7 15"/>`,
+  smp: `<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>`,
+  mace: `<circle cx="12" cy="7" r="4"/><line x1="12" y1="11" x2="12" y2="21"/><line x1="8" y1="18" x2="16" y2="18"/>`,
+  crystal: `<polygon points="12 2 21 7 21 17 12 22 3 17 3 7"/>`,
+  pot: `<path d="M10 3h4"/><path d="M10 3v4.5l-4.2 6.8A3 3 0 0 0 8.4 19h7.2a3 3 0 0 0 2.6-4.7L14 7.5V3"/>`,
+  netherop: `<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>`,
+  spearmace: `<line x1="4" y1="20" x2="17" y2="7"/><polygon points="17 7 21 4 20 8.5 15.5 11"/>`,
+  diamondsmp: `<polygon points="12 2 22 8.5 12 22 2 8.5"/>`,
+  tntcart: `<rect x="6" y="5" width="12" height="9" rx="1"/><line x1="6" y1="9.5" x2="18" y2="9.5"/><circle cx="9" cy="17.5" r="2"/><circle cx="15" cy="17.5" r="2"/>`
+};
+function svgIcon(key){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[key]||""}</svg>`;
+}
+let currentGM = "overall";
+let players = [];
+let editingId = null;
+let searchQuery = "";
+
+function initials(name){ return (name||"?").trim().slice(0,2).toUpperCase(); }
+function colorFor(name){
+  let h=0; for(const c of name) h = (h*31 + c.charCodeAt(0))>>>0;
+  return `hsl(${h%360} 55% 45%)`;
+}
+
+function renderTabs(){
+  const t = document.getElementById("tabs");
+  t.innerHTML = "";
+  const rb = document.createElement("div");
+  rb.className = "tab" + (currentGM==="rules"?" active":"");
+  rb.innerHTML = `<span class="ticon">${svgIcon("rules")}</span><span>Rules</span>`;
+  rb.onclick = ()=>{ currentGM = "rules"; render(); };
+  t.appendChild(rb);
+  GAMEMODES.forEach(([key,label])=>{
+    const b = document.createElement("div");
+    b.className = "tab" + (key===currentGM?" active":"");
+    b.innerHTML = `<span class="ticon">${svgIcon(key)}</span><span>${label}</span>`;
+    b.onclick = ()=>{ currentGM = key; render(); };
+    t.appendChild(b);
+  });
+}
+
+const RULES_HTML = `
+<div class="rules">
+  <h2 style="font-size:.7rem;margin:6px 0">TIER POINTS</h2>
+  <div class="stat"><span>S</span><span class="badge" style="background:var(--s)">100</span></div>
+  <div class="stat"><span>High A</span><span class="badge" style="background:var(--a)">80</span></div>
+  <div class="stat"><span>Low A</span><span class="badge" style="background:var(--a)">80</span></div>
+  <div class="stat"><span>High B</span><span class="badge" style="background:var(--b)">60</span></div>
+  <div class="stat"><span>Low B</span><span class="badge" style="background:var(--b)">60</span></div>
+  <div class="stat"><span>C</span><span class="badge" style="background:var(--c)">45</span></div>
+  <div class="stat"><span>D</span><span class="badge" style="background:var(--d)">30</span></div>
+  <div class="stat"><span>E</span><span class="badge" style="background:var(--e)">15</span></div>
+  <div class="stat"><span>F</span><span class="badge" style="background:var(--f)">5</span></div>
+
+  <h2 style="font-size:.7rem;margin:16px 0 6px">EVAL PRIORITY ORDER</h2>
+  <p class="rtext">1. Skills (mechanics) &nbsp;2. Game sense &nbsp;3. Techs (gamemode-specific) &nbsp;4. Score — checked last, confirms rather than overrides 1–3.</p>
+
+  <h2 style="font-size:.7rem;margin:16px 0 6px">HIGH vs LOW</h2>
+  <p class="rtext"><b>Low</b> = 3+ losses to same-tier peers, or took multiple attempts to pass.<br><b>High</b> = consistent wins vs same-tier peers, tester judgment call.</p>
+
+  <h2 style="font-size:.7rem;margin:16px 0 6px">EVAL TEST SCOPE</h2>
+  <p class="rtext">Eval tests place F through High B only. S and Low/High A require a separate high test: beat a Low + High benchmark of the tier above, under the death cap.</p>
+
+  <h2 style="font-size:.7rem;margin:16px 0 6px">FORMATS &amp; DEATH CAPS</h2>
+  <p class="rtext">Sword FT5 (3) · Axe FT3 (1) · UHC FT3 (1) · SMP FT3 (1) · Mace FT2 (1) · Pot FT3 (1) · Netherite OP FT3 (1) · Spear Mace FT2 (1) · Diamond SMP FT2 (1) · TNT Cart FT2 (1). High B+ uses longer formats (FT5–FT10) — number in () is the death cap.</p>
+
+  <h2 style="font-size:.7rem;margin:16px 0 6px">GOLDEN RULE</h2>
+  <p class="rtext">A clean scoreline never overrides a named mechanical flaw (missing jump resets, self-damage, wasted resources, etc). When in doubt, place lower — prove it upward on retest.</p>
+</div>`;
+
+
+function render(){
+  renderTabs();
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+  const searchBox = document.getElementById("searchInput");
+  if(currentGM === "rules"){
+    searchBox.style.display = "none";
+    board.innerHTML = RULES_HTML;
+    return;
+  }
+  searchBox.style.display = "block";
+  TIERS.forEach(tier=>{
+    const row = document.createElement("div");
+    row.className = "row";
+    const label = document.createElement("div");
+    label.className = "row-label";
+    label.style.background = TIER_COLOR[tier];
+    label.innerHTML = `<span class="tname">${TIER_SHORT[tier]}</span><span class="tpts">${POINTS[tier]}</span>`;
+    row.appendChild(label);
+    const pr = document.createElement("div");
+    pr.className = "row-players";
+    const inTier = players.filter(p => (p.tiers && p.tiers[currentGM]) === tier && p.name.toLowerCase().includes(searchQuery));
+    if(inTier.length===0){
+      const e = document.createElement("div"); e.className="empty"; e.textContent = searchQuery ? "no match" : "—"; pr.appendChild(e);
+    }
+    inTier.forEach(p=>{
+      const card = document.createElement("div");
+      card.className = "card";
+      card.onclick = ()=> openView(p);
+      const head = document.createElement("div");
+      head.className = "head";
+      head.style.background = colorFor(p.name);
+      head.textContent = initials(p.name);
+      const name = document.createElement("div");
+      name.className = "pname";
+      name.textContent = p.name;
+      card.appendChild(head); card.appendChild(name);
+      pr.appendChild(card);
+    });
+    row.appendChild(pr);
+    board.appendChild(row);
+  });
+}
+
+function openView(p){
+  document.getElementById("viewName").textContent = p.name;
+  const s = document.getElementById("viewStats");
+  s.innerHTML = "";
+  GAMEMODES.forEach(([key,label])=>{
+    const val = (p.tiers && p.tiers[key]) || "—";
+    const row = document.createElement("div");
+    row.className = "stat";
+    const badge = val!=="—" ? `<span class="badge" style="background:${TIER_COLOR[val]}">${val} · ${POINTS[val]}</span>` : "—";
+    row.innerHTML = `<span>${label}</span>${badge}`;
+    s.appendChild(row);
+  });
+  document.getElementById("viewBg").classList.add("open");
+  document.getElementById("editFromView").onclick = ()=>{ document.getElementById("viewBg").classList.remove("open"); openEdit(p); };
+}
+
+function buildGmGrid(existing){
+  const g = document.getElementById("gmGrid");
+  g.innerHTML = "";
+  GAMEMODES.forEach(([key,label])=>{
+    const f = document.createElement("div");
+    f.className = "field";
+    const sel = document.createElement("select");
+    sel.id = "gm_"+key;
+    sel.innerHTML = `<option value="">${label}: —</option>` + TIERS.map(t=>`<option value="${t}" ${existing&&existing[key]===t?"selected":""}>${label}: ${t}</option>`).join("");
+    f.appendChild(sel);
+    g.appendChild(f);
+  });
+}
+
+function openAdd(){
+  editingId = null;
+  document.getElementById("modalTitle").textContent = "ADD PLAYER";
+  document.getElementById("fName").value = "";
+  document.getElementById("delBtn").style.display = "none";
+  buildGmGrid(null);
+  document.getElementById("modalBg").classList.add("open");
+}
+function openEdit(p){
+  editingId = p.id;
+  document.getElementById("modalTitle").textContent = "EDIT PLAYER";
+  document.getElementById("fName").value = p.name;
+  document.getElementById("delBtn").style.display = "block";
+  buildGmGrid(p.tiers||{});
+  document.getElementById("modalBg").classList.add("open");
+}
+
+async function save(){
+  const name = document.getElementById("fName").value.trim();
+  if(!name){ alert("Enter a name"); return; }
+  const tiers = {};
+  GAMEMODES.forEach(([key])=>{
+    const v = document.getElementById("gm_"+key).value;
+    if(v) tiers[key] = v;
+  });
+  try{
+    if(editingId){
+      await setDoc(doc(db,"players",editingId), {name, tiers});
+    } else {
+      await addDoc(playersCol, {name, tiers});
+    }
+    document.getElementById("modalBg").classList.remove("open");
+  }catch(e){ alert("Save failed: " + e.message); }
+}
+async function del(){
+  if(!editingId) return;
+  if(!confirm("Delete this player?")) return;
+  try{ await deleteDoc(doc(db,"players",editingId)); document.getElementById("modalBg").classList.remove("open"); }
+  catch(e){ alert("Delete failed: " + e.message); }
+}
+
+document.getElementById("addBtn").onclick = openAdd;
+document.getElementById("cancelBtn").onclick = ()=> document.getElementById("modalBg").classList.remove("open");
+document.getElementById("saveBtn").onclick = save;
+document.getElementById("delBtn").onclick = del;
+document.getElementById("closeView").onclick = ()=> document.getElementById("viewBg").classList.remove("open");
+
+document.getElementById("infoStats").innerHTML = TIERS.map(t=>
+  `<div class="stat"><span>${t}</span><span class="badge" style="background:${TIER_COLOR[t]}">${POINTS[t]} pts</span></div>`
+).join("");
+document.getElementById("infoBtn").onclick = ()=> document.getElementById("infoBg").classList.add("open");
+document.getElementById("closeInfo").onclick = ()=> document.getElementById("infoBg").classList.remove("open");
+document.getElementById("searchInput").oninput = (e)=>{ searchQuery = e.target.value.trim().toLowerCase(); render(); };
+
+render();
+onSnapshot(playersCol, snap=>{
+  players = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  document.getElementById("statusline").textContent = players.length + " players ranked";
+  render();
+}, err=>{
+  document.getElementById("statusline").textContent = "Connection error — check your Firebase config (see README).";
+  console.error(err);
+});
+</script>
+</body>
+</html>
